@@ -19,7 +19,7 @@ Author: *Nick Hlousek*
 ## Environment Setup
 We are going to setup a python virtual environment such that you can run any of the scripts in this project.  
 
-1. Starting from the Root Directory of the repository create a virtual python environment
+1. Starting from the ***Root Directory*** of the repository create a virtual python environment
 
 ```
 python3 -m venv ./StylesEnv
