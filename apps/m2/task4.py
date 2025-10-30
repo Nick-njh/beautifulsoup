@@ -2,7 +2,7 @@
 task4.py
 By Nick Hlousek
 
-Goal of this script is to print all tags with an id attribute
+Goal is this program is to print out only tags with an id using soup strainer
 """
 
 import sys
@@ -14,7 +14,7 @@ id_only_strainer = SoupStrainer(id=True)
 if __name__ == "__main__":
     
     if len(sys.argv) != 2:
-        print("USER ERROR\nEXECUTABLE STRUCTURE: python ./task4.py [HTML/XML File]")
+        print("USER ERROR\nEXECUTABLE STRUCTURE: python ./task2.py [HTML/XML File]")
         sys.exit()
 
     file_tree = None
@@ -33,5 +33,4 @@ if __name__ == "__main__":
 
     file_handle.close()
 
-    for tag_with_id in file_tree.find_all():
-        print(tag_with_id.name)
+    print(file_tree.prettify())
