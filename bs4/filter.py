@@ -680,3 +680,102 @@ class SoupStrainer(ElementFilter):
         :meta private:
         """
         return element if self.match(element) else None
+
+
+class SoupReplacer(ElementFilter):
+    """The `ElementFilter` subclass used internally by Beautiful Soup.
+
+    A `SoupReplacer` encapsulater the logic necessary to perform the
+    kind of matches supported by methods such as :py:meth:`Tag.find`.
+    The `SoupReplacer` object is ment to be pass into the ``replace_only``
+    argument of the `BeautifulSou[` constructor to replace tags while 
+    creating the parse tree.
+
+    :param og_tag: Tag to be repalced
+
+    :param alt_tag: Tag to replace og_tag
+
+    """
+    name_rules: List[TagNameMatchRule]
+    alt_tag: str
+
+    def __init__(
+            self,
+            og_tag: Optional[_StrainableElement] = None,
+            alt_tag: Optional[_StrainableElement] = None,
+            *ignore, **ignore_keywords,
+    ):
+        self.name_rules = cast(
+                List[TagNameMatchRule], list(self._make_match_rules(og_tag, TagNameMatchRule))
+        )
+        self.alt_tag = alt_tag
+
+    @classmethod
+    def _make_match_rules(
+        cls,
+        obj: Optional[Union[_StrainableElement, _StrainableAttribute]],
+        rule_class: Type[MatchRule],
+    ) -> Iterator[MatchRule]:
+        """Convert a vaguely-specific 'object' into one or more well-defined
+        `MatchRule` objects.
+
+        :param obj: Some kind of object that corresponds to one or more
+           matching rules.
+        :param rule_class: Create instances of this `MatchRule` subclass.
+        """
+        if obj is None:
+            return
+        if isinstance(obj, (str, bytes)):
+            yield rule_class(string=obj)
+        elif isinstance(obj, bool):
+            yield rule_class(present=obj)
+        elif callable(obj):
+            yield rule_class(function=obj)
+        elif isinstance(obj, _RegularExpressionProtocol):
+            yield rule_class(pattern=obj)
+        elif hasattr(obj, "__iter__"):
+            for o in obj:
+                if not isinstance(o, (bytes, str)) and hasattr(o, "__iter__"):
+                    # This is almost certainly the user's
+                    # mistake. This list contains another list, which
+                    # opens up the possibility of infinite
+                    # self-reference. In the interests of avoiding
+                    # infinite recursion, we'll ignore this item
+                    # rather than looking inside.
+                    warnings.warn(
+                        f"Ignoring nested list {o} to avoid the possibility of infinite recursion.",
+                        stacklevel=5,
+                    )
+                    continue
+                for x in cls._make_match_rules(o, rule_class):
+                    yield x
+        else:
+            yield rule_class(string=str(obj))
+
+    def replace_tag(
+        self, nsprefix: Optional[str], name: str
+    ) -> bool:
+        """Based on the name of a tag, see whether this
+        `SoupRepalcer` will replace a `Tag` the name of the object.
+
+        :param name: The name of the prospective tag.
+        :param attrs: The attributes of the prospective tag.
+        """
+        if self.alt_tag is None:
+            return False
+        prefixed_name = None
+        if nsprefix:
+            prefixed_name = f"{nsprefix}:{name}"
+        if self.name_rules:
+            # At least one name rule must match.
+            name_match = False
+            for rule in self.name_rules:
+                for x in name, prefixed_name:
+                    if x is not None:
+                        if rule.matches_string(x):
+                            name_match = True
+                            break
+            if not name_match:
+                return False
+        return True
+

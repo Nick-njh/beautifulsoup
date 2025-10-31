@@ -91,6 +91,7 @@ from .formatter import Formatter
 from .filter import (
     ElementFilter,
     SoupStrainer,
+    SoupReplacer,
 )
 from typing import (
     Any,
@@ -180,6 +181,7 @@ class BeautifulSoup(Tag):
     is_xml: bool
     known_xml: Optional[bool]
     parse_only: Optional[SoupStrainer]  #: :meta private:
+    replace_only: Optional[SoupReplacer]  #: :meta private:
 
     # These members are only used while parsing markup.
     markup: Optional[_RawMarkup]  #: :meta private:
@@ -212,6 +214,7 @@ class BeautifulSoup(Tag):
         features: Optional[Union[str, Sequence[str]]] = None,
         builder: Optional[Union[TreeBuilder, Type[TreeBuilder]]] = None,
         parse_only: Optional[SoupStrainer] = None,
+        replace_only: Optional[SoupReplacer] = None,
         from_encoding: Optional[_Encoding] = None,
         exclude_encodings: Optional[_Encodings] = None,
         element_classes: Optional[Dict[Type[PageElement], Type[PageElement]]] = None,
@@ -239,6 +242,10 @@ class BeautifulSoup(Tag):
          matching the SoupStrainer will be considered. This is useful
          when parsing part of a document that would otherwise be too
          large to fit into memory.
+
+        :param repalcer_only: A SoupReplacer. While parsing the document
+         matches to the SoupReplacer will cause the matched to be replaced
+         with the storage string
 
         :param from_encoding: A string indicating the encoding of the
          document to be parsed. Pass this in if Beautiful Soup is
@@ -319,6 +326,7 @@ class BeautifulSoup(Tag):
                 )
                 return kwargs.pop(old_name)
             return None
+
 
         parse_only = parse_only or deprecated_argument("parseOnlyThese", "parse_only")
         if parse_only is not None:
@@ -435,6 +443,7 @@ class BeautifulSoup(Tag):
         self.known_xml = self.is_xml
         self._namespaces = dict()
         self.parse_only = parse_only
+        self.replace_only = replace_only
 
         if hasattr(markup, "read"):  # It's a file-type object.
             markup = markup.read()
@@ -1022,6 +1031,8 @@ class BeautifulSoup(Tag):
             and not self.parse_only.allow_tag_creation(nsprefix, name, attrs)
         ):
             return None
+        if (self.replace_only and self.replace_only.replace_tag(nsprefix, name)):
+            name = self.replace_only.alt_tag
 
         tag_class = self.element_classes.get(Tag, Tag)
         # Assume that this is either Tag or a subclass of Tag. If not,
@@ -1056,6 +1067,9 @@ class BeautifulSoup(Tag):
 
         :meta private:
         """
+        if (self.replace_only and self.replace_only.replace_tag(nsprefix, name)):
+            name = self.replace_only.alt_tag
+
         # print("End tag: " + name)
         self.endData()
         self._popToTag(name, nsprefix)
