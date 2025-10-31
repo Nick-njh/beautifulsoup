@@ -16,6 +16,7 @@ from bs4.filter import (
     ElementFilter,
     MatchRule,
     SoupStrainer,
+    SoupReplacer,
     StringMatchRule,
     TagNameMatchRule,
 )
@@ -655,3 +656,39 @@ and they lived at the bottom of a well.</p>
         )
         string_soup = self.soup(html_doc, parse_only=only_short_strings)
         assert "\n\n\nElsie,\nLacie and\nTillie\n...\n" == string_soup.decode()
+
+class TestSoupReplacer(SoupTest):
+
+    def test_constructor_replacement_null(self):
+        markup = "<a><b>one string<div>another string</div></b></a>"
+
+        replace_a_tags = SoupReplacer('a')
+        
+        a_soup = self.soup(markup, replace_only=replace_a_tags)
+        assert markup == a_soup.decode()
+
+    def test_constructor_null_input_tag(self):
+        markup = "<a><b>one string<div>another string</div></b></a>"
+        result = "<a><a>one string<a>another string</a></a></a>"
+
+        replace_all_tags = SoupReplacer(alt_tag='a')
+        
+        a_soup = self.soup(markup, replace_only=replace_all_tags)
+        assert result == a_soup.decode()
+
+    def test_replacing_tag_in_string(self):
+        markup = "<a><b>one string<div>another string</div></b></a>"
+        result = "<a><carru>one string<div>another string</div></carru></a>"
+
+        replace_b_tags = SoupReplacer(og_tag="b", alt_tag="carru")
+        
+        a_soup = self.soup(markup, replace_only=replace_b_tags)
+        assert result == a_soup.decode()
+
+    def test_replaceing_tag_not_in_string(self):
+        markup = "<a><b>one string<div>another string</div></b></a>"
+
+        replace_c_tags = SoupReplacer(og_tag="c", alt_tag="carru")
+        
+        a_soup = self.soup(markup, replace_only=replace_c_tags)
+        assert markup == a_soup.decode()
