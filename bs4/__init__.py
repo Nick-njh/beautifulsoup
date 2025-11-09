@@ -1031,8 +1031,6 @@ class BeautifulSoup(Tag):
             and not self.parse_only.allow_tag_creation(nsprefix, name, attrs)
         ):
             return None
-        if (self.replace_only and self.replace_only.replace_tag(nsprefix, name)):
-            name = self.replace_only.alt_tag
 
         tag_class = self.element_classes.get(Tag, Tag)
         # Assume that this is either Tag or a subclass of Tag. If not,
@@ -1053,6 +1051,17 @@ class BeautifulSoup(Tag):
         )
         if tag is None:
             return tag
+
+        # Replacement
+        if (self.replace_only and self.replace_only.replace_tag(nsprefix, name)):
+            tag.name = self.replace_only.alt_tag
+        if self.replace_only.name_xformer is not None:
+            tag.name = self.replace_only.name_xformer(tag)
+        if self.replace_only.attrs_xformer is not None:
+            tag.attrs_xformer = self.replace_only.attrs_xformer(tag)
+        if self.replace_only.xformer is not None:
+            self.replace_only.xformer(tag)
+
         if self._most_recent_element is not None:
             self._most_recent_element.next_element = tag
         self._most_recent_element = tag
@@ -1067,8 +1076,6 @@ class BeautifulSoup(Tag):
 
         :meta private:
         """
-        if (self.replace_only and self.replace_only.replace_tag(nsprefix, name)):
-            name = self.replace_only.alt_tag
 
         # print("End tag: " + name)
         self.endData()

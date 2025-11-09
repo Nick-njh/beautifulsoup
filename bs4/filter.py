@@ -698,17 +698,24 @@ class SoupReplacer(ElementFilter):
     """
     name_rules: List[TagNameMatchRule]
     alt_tag: str
+    name_xformer: Callable[Tag, str] | None
+    attrs_xformer: Callable[Tag, dict[str, str]] | None
+    xformer =  Callable[Tag, None] | None
 
     def __init__(
             self,
             og_tag: Optional[_StrainableElement] = None,
             alt_tag: Optional[_StrainableElement] = None,
+            name_xformer: Optional[Callable[Tag, str]] = None,
+            attrs_xformer: Optional[Callable[Tag, dict[str, str]]] = None,
+            xformer: Optional[Callable[Tag, None]] = None,
             *ignore, **ignore_keywords,
     ):
-        self.name_rules = cast(
-                List[TagNameMatchRule], list(self._make_match_rules(og_tag, TagNameMatchRule))
-        )
+        self.name_rules = cast(List[TagNameMatchRule], list(self._make_match_rules(og_tag, TagNameMatchRule)))
         self.alt_tag = alt_tag
+        self.name_xformer = name_xformer
+        self.attrs_xformer = attrs_xformer
+        self.xformer = xformer
 
     @classmethod
     def _make_match_rules(

@@ -701,3 +701,67 @@ class TestSoupReplacer(SoupTest):
         
         a_soup = self.soup(markup, replace_only=replace_b_tags)
         assert result == a_soup.decode()
+
+    def test_constructor_null_input_tag_name_xformer(self):
+        markup = "<a><b>one string<div>another string</div></b></a>"
+        result = "<a><a>one string<a>another string</a></a></a>"
+
+        replace_all_tags = SoupReplacer(name_xformer=lambda tag: "a")
+        
+        a_soup = self.soup(markup, replace_only=replace_all_tags)
+        assert result == a_soup.decode()
+
+    def test_replacing_attribute_with_attrs_xformer(self):
+        markup = "<a><img src=test.png></img></a>"
+        result = '<a><img src="NO"/></a>'
+
+        def replace(Tag):
+            attr_copy = Tag.attrs
+            if "src" in attr_copy.keys():
+                attr_copy["src"] = "NO"
+            return attr_copy
+
+        replace_img_src_attrs = SoupReplacer(attrs_xformer=replace)
+        
+        a_soup = self.soup(markup, replace_only=replace_img_src_attrs)
+        assert result == a_soup.decode()
+
+    def test_adding_attribute_with_attrs_xformer(self):
+        markup = "<a><img src=test.png></img></a>"
+        result = '<a dummy="1"><img dummy="1" src="test.png"/></a>'
+
+        def replace(Tag):
+            attr_copy = Tag.attrs
+            attr_copy["dummy"] = "1"
+            return attr_copy
+
+        replace_img_src_attrs = SoupReplacer(attrs_xformer=replace)
+        
+        a_soup = self.soup(markup, replace_only=replace_img_src_attrs)
+        assert result == a_soup.decode()
+
+    def test_replacing_tag_in_string_xformer(self):
+        markup = "<a><b>one string<div>another string</div></b></a>"
+        result = "<a><carru>one string<div>another string</div></carru></a>"
+
+        def side_effect(tag):
+            if tag.name == "b":
+                tag.name = "carru"
+
+        replace_b_tags = SoupReplacer(xformer=side_effect)
+        
+        a_soup = self.soup(markup, replace_only=replace_b_tags)
+        assert result == a_soup.decode()
+
+    def test_delete_attrs_with_xformer(self):
+        markup = "<a><img dummy=1 src=test.png></img></a>"
+        result = '<a><img dummy="1"/></a>'
+
+        def side_effect(tag):
+            if "src" in tag.attrs.keys():
+                del tag.attrs["src"]
+
+        replace_b_tags = SoupReplacer(xformer=side_effect)
+        
+        a_soup = self.soup(markup, replace_only=replace_b_tags)
+        assert result == a_soup.decode()
