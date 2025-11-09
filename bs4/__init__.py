@@ -1053,14 +1053,15 @@ class BeautifulSoup(Tag):
             return tag
 
         # Replacement
-        if (self.replace_only and self.replace_only.replace_tag(nsprefix, name)):
-            tag.name = self.replace_only.alt_tag
-        if self.replace_only.name_xformer is not None:
-            tag.name = self.replace_only.name_xformer(tag)
-        if self.replace_only.attrs_xformer is not None:
-            tag.attrs_xformer = self.replace_only.attrs_xformer(tag)
-        if self.replace_only.xformer is not None:
-            self.replace_only.xformer(tag)
+        if (self.replace_only):
+            if (self.replace_only.replace_tag(nsprefix, name)):
+                tag.name = self.replace_only.alt_tag
+            if self.replace_only.name_xformer is not None:
+                tag.name = self.replace_only.name_xformer(tag)
+            if self.replace_only.attrs_xformer is not None:
+                tag.attrs_xformer = self.replace_only.attrs_xformer(tag)
+            if self.replace_only.xformer is not None:
+                self.replace_only.xformer(tag)
 
         if self._most_recent_element is not None:
             self._most_recent_element.next_element = tag
