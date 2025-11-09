@@ -692,3 +692,12 @@ class TestSoupReplacer(SoupTest):
         
         a_soup = self.soup(markup, replace_only=replace_c_tags)
         assert markup == a_soup.decode()
+
+    def test_replacing_tag_in_string_name_xformer(self):
+        markup = "<a><b>one string<div>another string</div></b></a>"
+        result = "<a><carru>one string<div>another string</div></carru></a>"
+
+        replace_b_tags = SoupReplacer(name_xformer=lambda tag: "carru" if tag.name == "b" else tag.name)
+        
+        a_soup = self.soup(markup, replace_only=replace_b_tags)
+        assert result == a_soup.decode()
