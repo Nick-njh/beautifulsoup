@@ -1437,8 +1437,7 @@ class TestWarnings(SoupTest):
             )
 
 class TestIteration(SoupTest):
-    @pytest.mark.iterable_test
-    def test_iterable(self):
+    def test_html(self):
         markup = '<html xmlns="http://www.w3.org/1999/xhtml"><a class="a b c"></html>'
         soup = self.soup(markup)
         all_nodes = [str(node) for node in soup]
@@ -1446,3 +1445,47 @@ class TestIteration(SoupTest):
                   '<a class="a b c"></a>']
         for index, value in enumerate(result):
             assert value == all_nodes[index]
+
+    def test_string(self):
+        soup = self.soup("<div><p>String 1</p><p>String 2</p></p>")
+        all_nodes = [str(node) for node in soup]
+        result = ["<div><p>String 1</p><p>String 2</p></div>",
+                  '<p>String 1</p>',
+                  'String 1',
+                  '<p>String 2</p>',
+                  'String 2']
+        for index, value in enumerate(result):
+            assert value == all_nodes[index]
+
+    def test_insertions(self):
+        soup = self.soup("<a>foo</a><b>bar</b>")
+        soup.b.insert_before("BAZ", " ", "QUUX")
+        soup.a.insert_before("QUUX", " ", "BAZ")
+        all_nodes = [str(node) for node in soup]
+        results = ["QUUX",
+                   " ",
+                   "BAZ",
+                   '<a>foo</a>',
+                   'foo',
+                   'BAZ',
+                   ' ',
+                   'QUUX',
+                   '<b>bar</b>',
+                   'bar']
+        for index, value in enumerate(results):
+            assert value == all_nodes[index]
+
+    def test_xml(self):
+        soup = self.soup('<root><element attribute="value">Content</element><emptyElement/></root>')
+        all_nodes = [str(node) for node in soup]
+        results = ['<root><element attribute="value">Content</element><emptyelement></emptyelement></root>',
+                   '<element attribute="value">Content</element>',
+                   'Content',
+                   '<emptyelement></emptyelement>']
+        for index, value in enumerate(results):
+            assert value == all_nodes[index]
+
+    def test_null(self):
+        soup = self.soup('')
+        all_nodes = [str(node) for node in soup]
+        assert(len(all_nodes) == 0)
