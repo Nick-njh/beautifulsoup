@@ -1162,6 +1162,11 @@ class BeautifulSoup(Tag):
             indent_level, eventual_encoding, formatter, iterator
         )
 
+    def __iter__(self):
+        """Iterates over whole tree in a breadth-first sequence"""
+        yield from self.self_and_descendants
+
+
 
 # Aliases to make it easier to get started quickly, e.g. 'from bs4 import _soup'
 _s = BeautifulSoup

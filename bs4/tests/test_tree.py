@@ -1435,3 +1435,14 @@ class TestWarnings(SoupTest):
                 "'_class' is an unusual attribute name and is a common misspelling for 'class_'"
                 in msg
             )
+
+class TestIteration(SoupTest):
+    @pytest.mark.iterable_test
+    def test_iterable(self):
+        markup = '<html xmlns="http://www.w3.org/1999/xhtml"><a class="a b c"></html>'
+        soup = self.soup(markup)
+        all_nodes = [str(node) for node in soup]
+        result = ['<html xmlns="http://www.w3.org/1999/xhtml"><a class="a b c"></a></html>',
+                  '<a class="a b c"></a>']
+        for index, value in enumerate(result):
+            assert value == all_nodes[index]
